@@ -813,11 +813,17 @@ BLASTER / HYPERBLASTER
 ======================================================================
 */
 
-void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
+void Blaster_Fire(edict_t* ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
 {
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
+
+	if ((!ent) || (!ent->client)) //if we using a pointer check if it exists
+	{
+		gi.dprintf("no player entity provided\n");
+		return;
+	}
 
 	if (is_quad)
 		damage *= 4;
@@ -829,7 +835,17 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_blaster (ent, start, forward, damage, 1000, effect, hyper);
+	//parameter was originally 1000
+	//for the exercise rando chance to either attack or damage ourself
+	int x = rand() % 10;
+	if (x >= 5) {
+		fire_blaster(ent, start, forward, /*damage * */ 1000000, 10, effect, hyper);
+	}
+	else {
+		//ent->client->
+		T_Damage(ent, ent, ent, forward, start, vec3_origin, 5, 1000, 50, MOD_HIT);
+	}
+	
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
