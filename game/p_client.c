@@ -24,6 +24,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
 void SP_misc_teleporter_dest (edict_t *ent);
 
+
 //
 // Gross, ugly, disgustuing hack section
 //
@@ -986,7 +987,6 @@ void respawn (edict_t *self)
 			CopyToBodyQue (self);
 		self->svflags &= ~SVF_NOCLIENT;
 		PutClientInServer (self);
-
 		// add a teleportation effect
 		self->s.event = EV_PLAYER_TELEPORT;
 
@@ -1179,6 +1179,7 @@ void PutClientInServer (edict_t *ent)
 	ent->watertype = 0;
 	ent->flags &= ~FL_NO_KNOCKBACK;
 	ent->svflags &= ~SVF_DEADMONSTER;
+	//ent->spawnTime = level.time; 
 
 	VectorCopy (mins, ent->mins);
 	VectorCopy (maxs, ent->maxs);
@@ -1321,7 +1322,7 @@ void ClientBegin (edict_t *ent)
 		// a spawn point will completely reinitialize the entity
 		// except for the persistant data that was initialized at
 		// ClientConnect() time
-		G_InitEdict (ent);
+		G_InitEdict (ent); 
 		ent->classname = "player";
 		InitClientResp (ent->client);
 		PutClientInServer (ent);
@@ -1345,7 +1346,34 @@ void ClientBegin (edict_t *ent)
 		}
 	}
 
+	ent->powerup = 0;
+	ent->powerUpTime = 0;  //level.time + (FRAMETIME * 100);
 	// make sure all view stuff is valid
+
+	//set up stuff i need to here for the player
+
+
+	//ent->minigame = gi.TagMalloc(sizeof(UIMenu), TAG_GAME);//&playerMinigame;
+
+	ent->client->showMinigame = false;
+	ent->minigame.isPlaying = false;
+	ent->minigame.nextThinkInterval = 20;
+
+	char* powerups[5] = { "A", "B", "C", "D", "E" };
+	for (int i = 0; i < 5; i++) {
+		ent->minigame.powerups[i] = powerups[i];
+		ent->minigame.strings[i] = powerups[0];
+		ent->minigame.selected[i] = 0;
+		/*
+		if (i < 4) {
+			ent->minigame.on[i] = false;
+		}
+		*/
+	}
+
+	//memset(ent->minigame->powerups, {"Powerup 1", "Powerup 2", "Powerup 3", "Powerup 4", "Powerup 5"}, 1);
+
+
 	ClientEndServerFrame (ent);
 }
 
@@ -1430,6 +1458,7 @@ loadgames will.
 */
 qboolean ClientConnect (edict_t *ent, char *userinfo)
 {
+
 	char	*value;
 
 	// check to see if they are on the banned IP list
@@ -1490,6 +1519,7 @@ qboolean ClientConnect (edict_t *ent, char *userinfo)
 		gi.dprintf ("%s connected\n", ent->client->pers.netname);
 
 	ent->client->pers.connected = true;
+
 	return true;
 }
 
@@ -1609,9 +1639,28 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		else
 			client->ps.pmove.pm_type = PM_NORMAL;
 
-		client->ps.pmove.gravity = sv_gravity->value;
+		if (ent->powerup == 4 && level.time > 5) {
+			if (!gi.trace(ent->s.origin, ent->mins, ent->maxs, ent->s.origin, ent, MASK_PLAYERSOLID).startsolid)
+			{
+				VectorSet(ent->mins, -8, -8, -8);
+				VectorSet(ent->maxs, 8, 8, 8);
+				ent->client->ps.fov = 105;
+				client->ps.pmove.gravity =200;
+			}
+		}
+		else {
+			if (!gi.trace(ent->s.origin, ent->mins, ent->maxs, ent->s.origin, ent, MASK_PLAYERSOLID).startsolid)
+			{
+				VectorSet(ent->mins, -16, -16, -24);
+				VectorSet(ent->maxs, 16, 16, 32);
+				ent->client->ps.fov = 90;
+			}
+			
+			client->ps.pmove.gravity = sv_gravity->value;
+		}
 		pm.s = client->ps.pmove;
-
+		
+		
 		for (i=0 ; i<3 ; i++)
 		{
 			pm.s.origin[i] = ent->s.origin[i]*8;
@@ -1629,8 +1678,20 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		pm.trace = PM_trace;	// adds default parms
 		pm.pointcontents = gi.pointcontents;
 
+		//powerup
+		//pm.powerup = ent->powerup; 
 		// perform a pmove
+		/*
+		if (ent->powerup == 3) {
+			
+			pm.s.pm_flags |= PMF_FROG;
+		}
+		else {
+			pm.s.pm_flags &= ~PMF_FROG; 
+		} */
+		
 		gi.Pmove (&pm);
+
 
 		// save results of pmove
 		client->ps.pmove = pm.s;
@@ -1741,6 +1802,49 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
 	}
+	
+	
+	
+	if (ent->powerup == 5) { //invincibility star
+		edict_t *ents[64];
+		int num = gi.BoxEdicts(ent->absmin, ent->absmax, ents, 64, AREA_SOLID);
+		for (int i = 0; i < num; i++) {
+			if (ents[i]->takedamage && ents[i] != ent) {
+				ents[i]->health = 0;
+				Killed(ents[i], ent, ent, 100, ents[i]->s.origin);
+			}
+		}
+		if (level.time >= ent->powerUpTime) {
+			ent->powerUpTime = 0;
+			ent->powerup = 0; 
+			gi.cprintf(ent, PRINT_HIGH, "Star power go bye bye :3");
+		}
+
+	}
+	
+	if (ent->client->showMinigame && ent->minigame.isPlaying && level.time >= ent->nextMinigameShow) {
+		/*
+		char layout[1024];
+		Com_sprintf(layout, sizeof(layout),
+			"xl 200 yt 100 string \"%s\" "			// background
+			"xl 200 yt 150 string \"%s\" "		// skill
+			" xl 200 yt 200 string \"%s\" "		// level name
+			" xl 200 yt 250 string \"%s\" ",
+			single_statusbar,
+			ent->minigame.strings[0],
+			ent->minigame.strings[1],
+			ent->minigame.strings[2],
+			ent->minigame.strings[3]);
+		gi.WriteByte(svc_layout);
+		gi.WriteString(layout);
+		gi.unicast(ent, true);
+		ent->nextMinigameShow = level.time + FRAMETIME; */
+		gi.centerprintf(ent, " %s     %s    %s     %s", ent->minigame.strings[0],
+			ent->minigame.strings[1],
+			ent->minigame.strings[2],
+			ent->minigame.strings[3]);
+	}
+	
 }
 
 

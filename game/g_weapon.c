@@ -318,14 +318,24 @@ void blaster_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *
 
 	if (self->owner->client)
 		PlayerNoise(self->owner, self->s.origin, PNOISE_IMPACT);
+	if (self->owner->powerup == 3) {
+		// bounce off world geometry
+		if (!other->takedamage)
+			return;
 
+	}
 	if (other->takedamage)
 	{
 		if (self->spawnflags & 1)
 			mod = MOD_HYPERBLASTER;
 		else
 			mod = MOD_BLASTER;
-		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane->normal, self->dmg, 1, DAMAGE_ENERGY, mod);
+		if (self->owner->powerup == 3) {
+			T_Damage(other, self, self->owner, self->velocity, self->s.origin, plane->normal, 10000, 1, DAMAGE_ENERGY, mod);
+		}
+		else {
+			T_Damage(other, self, self->owner, self->velocity, self->s.origin, plane->normal, self->dmg, 1, DAMAGE_ENERGY, mod);
+		}
 	}
 	else
 	{
@@ -360,7 +370,14 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	VectorCopy (start, bolt->s.old_origin);
 	vectoangles (dir, bolt->s.angles);
 	VectorScale (dir, speed, bolt->velocity);
-	bolt->movetype = MOVETYPE_FLYMISSILE;
+	if (self->powerup == 3) {
+		
+		bolt->movetype = MOVETYPE_BOUNCE;
+		bolt->gravity = 1.0f;
+	}
+	else {
+		bolt->movetype = MOVETYPE_FLYMISSILE;
+	}
 	bolt->clipmask = MASK_SHOT;
 	bolt->solid = SOLID_BBOX;
 	bolt->s.effects |= effect;
@@ -370,7 +387,13 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	bolt->s.sound = gi.soundindex ("misc/lasfly.wav");
 	bolt->owner = self;
 	bolt->touch = blaster_touch;
-	bolt->nextthink = level.time + 2;
+	if (self-> powerup == 3) {
+		bolt->nextthink = level.time + 30;
+	}
+	else {
+		bolt->nextthink = level.time + 2;
+	}
+	
 	bolt->think = G_FreeEdict;
 	bolt->dmg = damage;
 	bolt->classname = "bolt";

@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef struct
 {
-	vec3_t		origin;			// full float precision
+	vec3_t		origin;			// full float precision 
 	vec3_t		velocity;		// full float precision
 
 	vec3_t		forward, right, up;
@@ -530,36 +530,41 @@ PM_WaterMove
 
 ===================
 */
-void PM_WaterMove (void)
+void PM_WaterMove(void)
 {
 	int		i;
 	vec3_t	wishvel;
 	float	wishspeed;
 	vec3_t	wishdir;
 
-//
-// user intentions
-//
-	for (i=0 ; i<3 ; i++)
-		wishvel[i] = pml.forward[i]*pm->cmd.forwardmove + pml.right[i]*pm->cmd.sidemove;
+	//
+	// user intentions
+	//
+	for (i = 0; i < 3; i++)
+		wishvel[i] = pml.forward[i] * pm->cmd.forwardmove + pml.right[i] * pm->cmd.sidemove;
 
 	if (!pm->cmd.forwardmove && !pm->cmd.sidemove && !pm->cmd.upmove)
-		wishvel[2] -= 60;		// drift towards bottom
+		wishvel[2] -= 60;
 	else
 		wishvel[2] += pm->cmd.upmove;
 
-	PM_AddCurrents (wishvel);
+	PM_AddCurrents(wishvel);
 
-	VectorCopy (wishvel, wishdir);
+	VectorCopy(wishvel, wishdir);
 	wishspeed = VectorNormalize(wishdir);
 
 	if (wishspeed > pm_maxspeed)
 	{
-		VectorScale (wishvel, pm_maxspeed/wishspeed, wishvel);
+		VectorScale(wishvel, pm_maxspeed / wishspeed, wishvel);
 		wishspeed = pm_maxspeed;
 	}
-	wishspeed *= 0.5;
-
+	//if (pm->s.pm_flags & PMF_FROG){
+		//Com_Printf("SWIMBOOST ACTIVE\n");
+		//wishspeed *= 2;
+	//} else {
+		wishspeed *= 0.5;
+	//}
+	//wishspeed *= 0.5;
 	PM_Accelerate (wishdir, wishspeed, pm_wateraccelerate);
 
 	PM_StepSlideMove ();

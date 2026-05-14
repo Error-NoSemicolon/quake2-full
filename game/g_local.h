@@ -267,6 +267,13 @@ typedef struct gitem_s
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames
 //
+
+#define STAT_CUSTOM_FLAGS 30
+
+#define CF_FROG (1 << 0)
+#define CF_POUND  (1 << 1)
+
+
 typedef struct
 {
 	char		helpmessage1[512];
@@ -601,6 +608,8 @@ extern	gitem_t	itemlist[];
 //
 void Cmd_Help_f (edict_t *ent);
 void Cmd_Score_f (edict_t *ent);
+void Cmd_Minigame_f(edict_t* ent);
+void showMinigameHud(edict_t* ent);
 
 //
 // g_items.c
@@ -826,6 +835,29 @@ void GetChaseTarget(edict_t *ent);
 #define	ANIM_REVERSE	6
 
 
+typedef struct {
+	//UI Strings
+	char* str1;
+	char* str2;
+	char* str3;
+	char* str4;
+	char* strings[4];
+	int index;
+	int slot;
+	//isplaying
+	qboolean isPlaying; 
+
+	//which slots are still running
+	int selected[5];
+
+	//next think time
+	int nextThinkInterval; 
+	float nextThink; 
+
+	char* powerups[5];
+
+
+} UIMenu;
 // client data that stays across multiple level loads
 typedef struct
 {
@@ -892,6 +924,9 @@ struct gclient_s
 	qboolean	showinventory;		// set layout stat
 	qboolean	showhelp;
 	qboolean	showhelpicon;
+	qboolean	showCustomHelp; 
+	qboolean	showMinigame;
+	char		powerUpString[1024];
 
 	int			ammo_index;
 
@@ -1109,5 +1144,20 @@ struct edict_s
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
+
+	UIMenu			minigame;
+	int				powerup; 
+	float			powerUpTime; 
+	float			freezeDebuff;
+	float			unfreeze; 
+	int				ogmovetype; 
+	qboolean		frozen; 
+	float nextMinigameShow;
+
+//	float spawnTime; 
+
 };
+
+
+
 

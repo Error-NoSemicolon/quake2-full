@@ -491,6 +491,167 @@ void Cmd_Inven_f (edict_t *ent)
 
 /*
 =================
+Cmd_Help_f
+=================
+*/
+void Cmd_ShowHelp_f(edict_t* ent)
+{
+	gi.centerprintf(ent, "Sos pwa");
+	gclient_t* cl;
+
+	cl = ent->client;
+	if (cl->showCustomHelp)
+	{
+		cl->showCustomHelp = false;
+		return;
+	}
+
+	cl->showCustomHelp = true; 
+
+	
+	//char UIString[] = "xl 100 yt 0 string \"Quick Help for Mario Quake\"";
+	//char UIString2[] = "xl 100 yt 70 string \"For now there ain't much lol...\"";
+	//char UIString2[] = "xl 100 yt 0 string \"Quick Help for Mario Quake\"";
+	char space[] = " ";
+	char UIString[] = "xl 0 yt 0 w 50 string \"Quick Help for Mario Quake\" xl 0 yt 70 string \"Type showMinigame in chat to run minigame\"";
+	//strcat(UIString, space);
+	//strcat(UIString, UIString2);
+	gi.cprintf(ent, PRINT_HIGH, "%d",  ent->powerup);
+
+	/*
+	gi.WriteByte(svc_layout);
+	gi.WriteString(UIString);
+	gi.WriteString(UIString2);
+	gi.unicast(ent, true); */
+
+	
+	gi.WriteByte(svc_layout);
+	gi.WriteString(UIString);
+	//gi.WriteString(UIString2);
+	gi.unicast(ent, true);
+
+
+}
+
+/*
+=================
+Cmd_MiniGame
+=================
+*/
+void Cmd_ShowMinigame_f(edict_t* ent)
+{
+	gclient_t* cl;
+
+	cl = ent->client;
+	if (cl->showMinigame)
+	{
+		cl->showMinigame = false;
+		ent->minigame.nextThinkInterval = 6; 
+		ent->minigame.index = 0; 
+		ent->minigame.slot = 0; 
+		ent->minigame.isPlaying = false;
+		for (int i = 0; i < 3; i++) {
+			ent->minigame.strings[i] = ent->minigame.powerups[0];
+			ent->minigame.selected[i] = 0; 
+		}
+		return;
+	}
+
+	cl->showMinigame = true;
+	ent->minigame.isPlaying = true;
+	 
+
+	ent->nextMinigameShow = level.time + FRAMETIME * 6; 
+	ent->minigame.nextThinkInterval = 6;
+		ent->minigame.nextThink = level.time + (FRAMETIME * ent->minigame.nextThinkInterval);
+		//gi.cprintf(ent, PRINT_HIGH, "%d\n", ent->minigame.nextThink);
+		ent->minigame.index = 0;
+		ent->minigame.slot = 0; 
+		for (int i = 0; i < 5; i++) {
+			ent->minigame.selected[i] = 0; 
+
+		}
+	
+
+
+}
+
+void Cmd_Slot_f(edict_t* ent)
+{
+	gclient_t* cl;
+
+	cl = ent->client;
+	if (cl->showMinigame)
+	{
+		if(strcmp(ent->minigame.strings[ent->minigame.slot], "A") == 0){
+			ent->minigame.selected[0]++;
+
+		} else if (strcmp(ent->minigame.strings[ent->minigame.slot], "B") == 0) {
+			ent->minigame.selected[1]++;
+		}
+		else if (strcmp(ent->minigame.strings[ent->minigame.slot], "C") == 0) {
+			ent->minigame.selected[2]++;
+		}
+		else if (strcmp(ent->minigame.strings[ent->minigame.slot], "D") == 0) {
+			ent->minigame.selected[3]++;
+		}
+		else if (strcmp(ent->minigame.strings[ent->minigame.slot], "E") == 0) {
+			ent->minigame.selected[4]++;
+		}
+		ent->minigame.slot++;
+		switch (ent->minigame.nextThinkInterval) {
+		case 6: 
+			ent->minigame.nextThinkInterval = 4;
+			break;
+		case 4:
+			ent->minigame.nextThinkInterval = 2;
+			break;
+		case 2:
+			ent->minigame.nextThinkInterval = 1;
+			break;
+		case 1:
+			ent->minigame.nextThinkInterval = 0;
+			ent->minigame.isPlaying = false; 
+			if (strcmp(ent->minigame.strings[0], ent->minigame.strings[1]) == 0 && strcmp(ent->minigame.strings[0], ent->minigame.strings[2]) == 0 && strcmp(ent->minigame.strings[0], ent->minigame.strings[3]) == 0) {
+				ent->powerup = 5; 
+				ent->powerUpTime = level.time + (FRAMETIME * 100);
+			}
+			else if (ent->minigame.selected[0] == 3 || ent->minigame.selected[1] == 3 || ent->minigame.selected[2] == 3 || ent->minigame.selected[3] == 3 || ent->minigame.selected[4] == 3) {
+				ent->powerup = 4; 
+			}
+			else if (ent->minigame.selected[0] == 2 || ent->minigame.selected[1] == 2 || ent->minigame.selected[2] == 2 || ent->minigame.selected[3] == 2 || ent->minigame.selected[4] == 2) {
+				int twos = 0; 
+				for (int i = 0; i < 5; i++) {
+					if (ent->minigame.selected[i] == 2) {
+						twos++;
+					}
+				}
+				if (twos > 1) {
+					ent->powerup = 3;
+				}
+				else {
+					ent->powerup = 2; 
+				}
+			}
+			else {
+				ent->powerup = 1; 
+			}
+			memset(ent->minigame.selected, 0, sizeof(ent->minigame.selected));
+			break;
+		}
+		return;
+	}
+
+}
+
+void Cmd_LosePower_f(edict_t* ent)
+{
+	ent->powerup = 0;
+
+}
+
+/*
+=================
 Cmd_InvUse_f
 =================
 */
@@ -900,6 +1061,45 @@ void Cmd_PlayerList_f(edict_t *ent)
 }
 
 
+void Cmd_Power_f(edict_t* ent)
+{
+	char* name;
+	gitem_t* it;
+	int			index;
+	int			i;
+	qboolean	give_all;
+	edict_t* it_ent;
+
+	if (deathmatch->value && !sv_cheats->value)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
+		return;
+	}
+
+	name = gi.args();
+
+	if (Q_stricmp(name, "mushroom") == 0) {
+		ent->powerup = 1; 
+	}
+	else if (Q_stricmp(name, "ice") == 0) {
+		ent->powerup = 2;
+	}
+	else if (Q_stricmp(name, "fire") == 0) {
+		ent->powerup = 3;
+	}
+	else if (Q_stricmp(name, "shrink") == 0) {
+		ent->powerup = 4;
+	}
+	else if (Q_stricmp(name, "star") == 0) {
+		ent->powerup = 5;
+	}
+	else {
+		ent->powerup = 0;
+	}
+		
+}
+
+
 /*
 =================
 ClientCommand
@@ -987,6 +1187,16 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+	else if (Q_stricmp(cmd, "showHelp") == 0)
+		Cmd_ShowHelp_f (ent);
+	else if (Q_stricmp(cmd, "showMinigame") == 0)
+		Cmd_ShowMinigame_f(ent);
+	else if (Q_stricmp(cmd, "slot") == 0)
+		Cmd_Slot_f(ent);
+	else if (Q_stricmp(cmd, "power") == 0)
+		Cmd_Slot_f(ent);
+	else if (Q_stricmp(cmd, "losePowerup") == 0)
+		Cmd_LosePower_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

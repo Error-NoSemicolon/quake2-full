@@ -477,6 +477,7 @@ typedef enum
 #define	PMF_TIME_LAND		16	// pm_time is time before rejump
 #define	PMF_TIME_TELEPORT	32	// pm_time is non-moving time
 #define PMF_NO_PREDICTION	64	// temporarily disables prediction (used for grappling hook)
+//#define PMF_FROG			128
 
 // this structure needs to be communicated bit-accurate
 // from the server to the client to guarantee that
@@ -492,7 +493,7 @@ typedef struct
 	byte		pm_flags;		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
 	short		gravity;
-	short		delta_angles[3];	// add to command angles to get view direction
+	short		delta_angles[3];	// add to command angles to get view direction 
 									// changed by spawns, rotating objects, and teleporters
 } pmove_state_t;
 
@@ -543,6 +544,8 @@ typedef struct
 	// callbacks to test the world
 	trace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 	int			(*pointcontents) (vec3_t point);
+
+	//int	powerup;
 } pmove_t;
 
 
@@ -1008,6 +1011,8 @@ typedef enum
 #define	STAT_FLASHES			15		// cleared each frame, 1 = health, 2 = armor
 #define STAT_CHASE				16
 #define STAT_SPECTATOR			17
+#define STAT_POWERUP			18
+
 
 #define	MAX_STATS				32
 

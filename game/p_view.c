@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 #include "m_player.h"
+extern char* single_statusbar;
 
 
 
@@ -1083,5 +1084,11 @@ void ClientEndServerFrame (edict_t *ent)
 		DeathmatchScoreboardMessage (ent, ent->enemy);
 		gi.unicast (ent, false);
 	}
+	/*
+	if (ent->client->showMinigame && ent->minigame.isPlaying && level.time >= ent->nextMinigameShow) {
+		showMinigameHud(ent);
+		ent->nextMinigameShow = level.time + FRAMETIME; 
+	} */ 
+	
 }
 

@@ -427,6 +427,16 @@ void monster_think (edict_t *self)
 	M_CatagorizePosition (self);
 	M_WorldEffects (self);
 	M_SetEffects (self);
+
+	if (self->frozen && level.time >= self->unfreeze) {
+		self->frozen = false; 
+		self->freezeDebuff = 0;
+		self->unfreeze = 0;
+		//self->movetype = self->ogmovetype;
+		self->monsterinfo.aiflags &= ~AI_STAND_GROUND;
+		gi.dprintf("unice ");
+
+	}
 }
 
 

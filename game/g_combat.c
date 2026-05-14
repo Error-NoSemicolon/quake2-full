@@ -383,9 +383,56 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	int			psave;
 	int			te_sparks;
 
+	if (!targ->client && !inflictor->client && attacker->client && attacker->powerup == 2 && targ->takedamage && !targ->frozen) {
+		//set poweruptime
+		//set movetype to false
+		//targ->ogmovetype = targ->movetype;
+		//targ->movetype = MOVETYPE_NONE;
+		targ->monsterinfo.aiflags |= AI_STAND_GROUND;
+		targ->frozen = true;
+		targ->freezeDebuff = level.time + (FRAMETIME * 10);
+		targ->unfreeze = level.time + (FRAMETIME * 50);
+		gi.dprintf("icy  ");
+		//set timer until can move again
+	}
+
+	if (!targ->client && targ->frozen) {
+		if (level.time <= targ->freezeDebuff){
+			return;
+		}
+		else { //can autokill frozen enemies
+			targ->health = 0;
+			Killed(targ, inflictor, attacker, 1, targ->s.origin);
+			return;
+		}
+	}
+
+	//gi.dprintf("T_Damage called: damage=%d\n", damage);
+	if (targ->client && targ->powerup == 4) {
+		targ->health = 0;
+		Killed(targ, inflictor, attacker, 1, targ->s.origin);
+		return;
+	}
+	if (targ->client && targ->powerup > 0) {  //I CHANGED, check for powerup 
+		if(targ->powerUpTime == 0)
+			gi.cprintf(targ, PRINT_HIGH, "powerup lost, no damage taken ");
+		if (targ->powerup < 5) {
+			targ->powerup = 0;
+			targ->powerUpTime = level.time + (FRAMETIME * 10);
+		}
+		
+		//damage = 0;
+		return;
+	}
+
+	if (targ->client && level.time <= targ->powerUpTime) {
+		return;
+	}
+	
 	if (!targ->takedamage)
 		return;
 
+	targ->powerUpTime = 0;
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs

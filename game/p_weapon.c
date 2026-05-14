@@ -635,7 +635,7 @@ void Weapon_Grenade (edict_t *ent)
 			if (rand()&15)
 				return;
 		}
-
+		
 		if (++ent->client->ps.gunframe > 48)
 			ent->client->ps.gunframe = 16;
 		return;
@@ -837,14 +837,14 @@ void Blaster_Fire(edict_t* ent, vec3_t g_offset, int damage, qboolean hyper, int
 
 	//parameter was originally 1000
 	//for the exercise rando chance to either attack or damage ourself
-	int x = rand() % 10;
-	if (x >= 5) {
-		fire_blaster(ent, start, forward, /*damage * */ 1000000, 10, effect, hyper);
-	}
-	else {
+	//int x = rand() % 10;
+	//if (x >= 5) {
+	fire_blaster(ent, start, forward, damage, 1000, effect, hyper);
+
+	//else {
 		//ent->client->
-		T_Damage(ent, ent, ent, forward, start, vec3_origin, 5, 1000, 50, MOD_HIT);
-	}
+	//	T_Damage(ent, ent, ent, forward, start, vec3_origin, 5, 1000, 50, MOD_HIT);
+	//}
 	
 
 	// send muzzle flash

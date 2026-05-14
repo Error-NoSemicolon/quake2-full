@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 #include "g_local.h"
-
+//extern char* single_statusbar;
 
 
 /*
@@ -246,6 +246,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer)
 		stringlength += j;
 	}
 
+
 	gi.WriteByte (svc_layout);
 	gi.WriteString (string);
 }
@@ -314,22 +315,85 @@ void HelpComputer (edict_t *ent)
 		sk = "hard+";
 
 	// send the layout
-	Com_sprintf (string, sizeof(string),
+	/*
+	if (ent->client->showMinigame) {
+		Com_sprintf(string, sizeof(string),
+			"xv 32 yv 8 picn help "			// background
+			"xv 202 yv 12 string2 \"%s\" "		// skill
+			"xv 0 yv 24 cstring2 \"%s\" "		// level name
+			"xv 0 yv 54 cstring2 \"%s\" "		// help 1
+			"xv 0 yv 110 cstring2 \"%s\" "		// help 2
+			"xv 50 yv 164 string2 \" kills     goals    secrets\" "
+			"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" "
+			"xl 200 yt 100 string \"%s\" "			// background
+			"xl 200 yt 150 string \"%s\" "		// skill
+			" xl 200 yt 200 string \"%s\" "		// level name
+			" xl 200 yt 250 string \"%s\" ",
+
+			sk,
+			level.level_name,
+			game.helpmessage1,
+			game.helpmessage2,
+			level.killed_monsters, level.total_monsters,
+			level.found_goals, level.total_goals,
+			level.found_secrets, level.total_secrets,
+			ent->minigame.strings[0],
+			ent->minigame.strings[1],
+			ent->minigame.strings[2],
+			ent->minigame.strings[3]);
+	}
+	else { */
+	/*	Com_sprintf(string, sizeof(string),
+			"xv 32 yv 8 picn help "			// background
+			"xv 202 yv 12 string2 \"%s\" "		// skill
+			"xv 0 yv 24 cstring2 \"%s\" "		// level name
+			"xv 0 yv 54 cstring2 \"%s\" "		// help 1
+			"xv 0 yv 110 cstring2 \"%s\" "		// help 2
+			"xv 50 yv 164 string2 \" kills     goals    secrets\" "
+			"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ",
+			sk,
+			level.level_name,
+			game.helpmessage1,
+			game.helpmessage2,
+			level.killed_monsters, level.total_monsters,
+			level.found_goals, level.total_goals,
+			level.found_secrets, level.total_secrets); */
+
+	Com_sprintf(string, sizeof(string),
 		"xv 32 yv 8 picn help "			// background
 		"xv 202 yv 12 string2 \"%s\" "		// skill
 		"xv 0 yv 24 cstring2 \"%s\" "		// level name
 		"xv 0 yv 54 cstring2 \"%s\" "		// help 1
 		"xv 0 yv 110 cstring2 \"%s\" "		// help 2
 		"xv 50 yv 164 string2 \" kills     goals    secrets\" "
-		"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ", 
-		sk,
-		level.level_name,
-		game.helpmessage1,
-		game.helpmessage2,
-		level.killed_monsters, level.total_monsters, 
+		"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ",
+		"Welcome to Mario Mod!",
+		"in console type showMinigame to win powerup",
+		"match is star, triple is shrink, double pair fire, pair is ice, lose is mushroom",
+		"0 no power, 1 mushroom, 2 ice, 3 fire, 4 shrink, 5 star",
+		level.killed_monsters, level.total_monsters,
 		level.found_goals, level.total_goals,
 		level.found_secrets, level.total_secrets);
+	//}
+	//}
+	/*
+	if (ent->client->showMinigame && ent->minigame.isPlaying)
+	{
 
+		Com_sprintf(string, sizeof(string),
+			"xl 200 yt 100 string \"%s\" "			// background
+			"xl 200 yt 150 string \"%s\" "		// skill
+			" xl 200 yt 200 string \"%s\" "		// level name
+			" xl 200 yt 250 string \"%s\" ",
+			ent->minigame.strings[0],
+			ent->minigame.strings[1],
+			ent->minigame.strings[2],
+			ent->minigame.strings[3]);
+	}
+	*/
+	/*
+	*ent->client->powerUpString = "NO POWERUP";
+	Com_sprintf(string, sizeof(string), "xl 0 yt 200 string \"%s\"", ent->client->powerUpString); */
 	gi.WriteByte (svc_layout);
 	gi.WriteString (string);
 	gi.unicast (ent, true);
@@ -366,6 +430,75 @@ void Cmd_Help_f (edict_t *ent)
 	HelpComputer (ent);
 }
 
+/*
+==================
+Cmd_minigame_f
+
+Display the current help message
+==================
+*/
+void Cmd_Minigame_f(edict_t* ent)
+{
+	//gi.cprintf(ent, PRINT_HIGH, "%d", ent->minigame.nextThink); 
+	//UIMenu* minigame = &ent->minigame; 
+	if (ent->minigame.isPlaying)
+	{
+		if (level.time >= ent->minigame.nextThink) {
+			ent->minigame.nextThink = level.time + (FRAMETIME * ent->minigame.nextThinkInterval);
+			//gi.cprintf(ent, PRINT_HIGH, "ok");
+			/*
+			for (int i = 0; i < ent->minigame.index; i++) {
+				//develop set strings
+			} */
+			for (int i = ent->minigame.slot; i < 4; i++) {
+				//deve
+				ent->minigame.strings[i] = ent->minigame.powerups[ent->minigame.index % 5];
+			}
+			ent->minigame.index++;
+		}
+
+		//gi.cprintf(ent, PRINT_HIGH, "minigame playing?");
+		/*
+		char UIString[] = "xl 0 yt 0 string \"Quick Help for Mario Quake\" xl 0 yt 70 string \"Type showMinigame in chat to run minigame\"";
+		
+		//char UIString[1024];
+		//snprintf(UIString, sizeof(UIString), "xl 200 yt 100 string \"%s\" xl 200 yt 150 string \"%s\" xl 200 yt 200 string \"%s\" xl 200 yt 250 string \"%s\"", ent->minigame.strings[0], ent->minigame.strings[1], ent->minigame.strings[2], ent->minigame.strings[3]);
+		gi.WriteByte(svc_layout);
+		gi.WriteString(UIString);
+		gi.unicast(ent, true);
+
+		*/
+		//char UIString[1024];
+		/*
+		Com_sprintf(UIString, sizeof(UIString),
+			"xl 200 yt 100 string \"%s\" "			// background
+			"xl 200 yt 150 string \"%s\" "		// skill
+			" xl 200 yt 200 string \"%s\" "		// level name
+			" xl 200 yt 250 string \"%s\" ",
+			ent->minigame.strings[0],
+			ent->minigame.strings[1],
+			ent->minigame.strings[2],
+			ent->minigame.strings[3]);
+
+		/
+		gi.WriteByte(svc_layout);
+		gi.WriteString(UIString);
+		gi.unicast(ent, true); */
+	}
+	else {
+		//go through win cases
+	}
+}
+
+void showMinigameHud(edict_t* ent) {
+	/*char UIString[1024];
+	snprintf(UIString, sizeof(UIString), "xl 200 yt 100 string \"%s\" xl 200 yt 150 string \"%s\" xl 200 yt 200 string \"%s\" xl 200 yt 250 string \"%s\"", ent->minigame.strings[0], ent->minigame.strings[1], ent->minigame.strings[2], ent->minigame.strings[3]);
+	gi.WriteByte(single_statusbar);
+	gi.WriteString(UIString);
+	gi.unicast(ent, true);*/
+}
+
+
 
 //=======================================================================
 
@@ -385,6 +518,7 @@ void G_SetStats (edict_t *ent)
 	//
 	ent->client->ps.stats[STAT_HEALTH_ICON] = level.pic_health;
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;
+	ent->client->ps.stats[STAT_POWERUP] = ent->powerup; 
 
 	//
 	// ammo
@@ -497,7 +631,7 @@ void G_SetStats (edict_t *ent)
 	}
 	else
 	{
-		if (ent->client->showscores || ent->client->showhelp)
+		if (ent->client->showscores || ent->client->showhelp || ent->client->showCustomHelp)
 			ent->client->ps.stats[STAT_LAYOUTS] |= 1;
 		if (ent->client->showinventory && ent->client->pers.health > 0)
 			ent->client->ps.stats[STAT_LAYOUTS] |= 2;
@@ -520,6 +654,11 @@ void G_SetStats (edict_t *ent)
 		ent->client->ps.stats[STAT_HELPICON] = 0;
 
 	ent->client->ps.stats[STAT_SPECTATOR] = 0;
+
+	if (ent->client->showMinigame == true) {
+		Cmd_Minigame_f(ent);
+		//gi.cprintf(ent, PRINT_HIGH, "showMinigame");
+	}
 }
 
 /*

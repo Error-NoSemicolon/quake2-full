@@ -774,6 +774,10 @@ qboolean ai_checkattack (edict_t *self, float dist)
 	qboolean	hesDeadJim;
 
 // this causes monsters to run blindly to the combat point w/o firing
+
+	if (self->frozen) {
+		return false; 
+	}
 	if (self->goalentity)
 	{
 		if (self->monsterinfo.aiflags & AI_COMBAT_POINT)
